@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>元素週期表記憶工具（118 全元素）</title>
+
+  <!-- 建議：GitHub Pages 直接用這份單檔 HTML 即可 -->
+  <style>
+    :root{
+      --bg1:#071226;
+      --bg2:#0b1630;
+      --card:#0e1d3a;
+      --card2:#0b1730;
+      --text:#eaf2ff;
+      --muted:#b7c7e6;
+      --line:rgba(148,163,184,.18);
+
+      --metal:#ffd97b;
+      --nonmetal:#8ae6b1;
+      --metalloid:#7fd0ff;
+
+      --btn:#132a55;
+      --btn2:#183463;
+      --btnText:#eaf2ff;
+      --shadow:0 14px 40px rgba(0,0,0,.35);
+      --shadow2:0 10px 24px rgba(0,0,0,.26);
+      --radius:18px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: "Noto Sans TC", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 20% 15%, rgba(70,120,255,.22), transparent 55%),
+        radial-gradient(900px 650px at 85% 25%, rgba(0,220,160,.18), transparent 55%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      min-height: 100dvh;
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    }
+
+    .app{
+      width:min(980px, 100%);
+      margin:0 auto;
+      padding:14px 14px 18px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    header{
+      background: rgba(255,255,255,.05);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      padding:12px 12px;
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      backdrop-filter: blur(10px);
+    }
+
+    .titleWrap{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    h1{
+      margin:0;
+      font-size: clamp(18px, 2.2vw, 22px);
+      letter-spacing:.5px;
+    }
+    .sub{
+      color:var(--muted);
+      font-size: 13px;
+    }
+    .progress{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.14);
+      font-size:13px;
+      color:var(--text);
+      white-space:nowrap;
+    }
+
+    .filters{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .chip{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.14);
+      user-select:none;
+      cursor:pointer;
+      transition: transform .08s ease;
+      font-size:13px;
+      white-space:nowrap;
+    }
+    .chip:active{ transform: scale(.98); }
+
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      box-shadow: 0 0 0 3px rgba(255,255,255,.06);
+    }
+    .dot.metal{ background:var(--metal); }
+    .dot.nonmetal{ background:var(--nonmetal); }
+    .dot.metalloid{ background:var(--metalloid); }
+
+    .chip input{ accent-color:#7fb0ff; }
+
+    main{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .cardWrap{
+      display:flex;
+      justify-content:center;
+    }
+
+    .card{
+      width: min(520px, 92vw);
+      height: min(70vh, 640px);
+      min-height: 360px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      position:relative;
+      perspective: 1200px;
+      overflow:hidden;
+    }
+
+    .cardHint{
+      position:absolute;
+      top:10px; right:10px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.16);
+      color: var(--muted);
+      font-size:12px;
+      z-index:3;
+      pointer-events:none;
+    }
+
+    .inner{
+      width:100%; height:100%;
+      position:absolute; inset:0;
+      transform-style: preserve-3d;
+      transition: transform .65s cubic-bezier(.2,.8,.2,1);
+    }
+    .card.flipped .inner{ transform: rotateY(180deg); }
+
+    .face{
+      position:absolute; inset:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      backface-visibility:hidden;
+      padding:22px 18px;
+      gap:14px;
+    }
+
+    .front{
+      background: radial-gradient(900px 520px at 30% 10%, rgba(110,170,255,.18), transparent 55%),
+                  linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.02));
+    }
+    .back{
+      transform: rotateY(180deg);
+      background: radial-gradient(900px 520px at 70% 15%, rgba(0,220,160,.16), transparent 55%),
+                  linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.02));
+    }
+
+    .badge{
+      position:absolute;
+      left:14px; top:14px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.16);
+      font-weight:700;
+      font-size:13px;
+      color: var(--text);
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .badge .miniDot{
+      width:10px;height:10px;border-radius:50%;
+    }
+
+    .symbol{
+      font-weight:900;
+      letter-spacing:1px;
+      font-size: clamp(72px, 12vw, 140px);
+      line-height:1;
+      text-shadow: 0 8px 22px rgba(0,0,0,.35);
+    }
+
+    .atomic{
+      font-size: clamp(14px, 3.2vw, 22px);
+      color: var(--muted);
+      margin-top:-4px;
+    }
+
+    .name{
+      font-size: clamp(56px, 11vw, 128px);
+      font-weight:900;
+      line-height:1.02;
+      text-shadow: 0 8px 22px rgba(0,0,0,.35);
+      text-align:center;
+      word-break: keep-all;
+      padding: 0 10px;
+    }
+
+    .mass{
+      font-size: clamp(16px, 3.6vw, 24px);
+      color: var(--muted);
+      margin-top:-6px;
+    }
+
+    .controls{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, var(--btn2), var(--btn));
+      color: var(--btnText);
+      padding: 12px 14px;
+      border-radius: 14px;
+      box-shadow: 0 10px 18px rgba(0,0,0,.22);
+      font-weight:800;
+      font-size: 14px;
+      cursor:pointer;
+      transition: transform .08s ease, filter .15s ease;
+      min-width: 110px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      user-select:none;
+      text-decoration:none;
+    }
+    .btn:active{ transform: scale(.98); }
+    .btn:hover{ filter: brightness(1.06); }
+
+    .btn.secondary{
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+    }
+
+    .btn.icon{
+      min-width: 0;
+      padding: 12px 14px;
+    }
+
+    .status{
+      text-align:center;
+      color: var(--muted);
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    /* Modal */
+    .modal{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.60);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 999;
+    }
+    .modal.show{ display:flex; }
+
+    .modalPanel{
+      width: min(1100px, 96vw);
+      height: min(78vh, 720px);
+      border-radius: 18px;
+      background: rgba(8,18,40,.92);
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .modalTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 10px;
+      border-bottom:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+    }
+
+    .modalTitle{
+      font-weight:800;
+      font-size:14px;
+      color: var(--text);
+    }
+
+    iframe{
+      border:0;
+      width:100%;
+      height:100%;
+      background:white;
+    }
+
+    /* Small screens */
+    @media (max-width: 420px){
+      .btn{ min-width: 96px; padding: 12px 12px; }
+      .card{ min-height: 340px; }
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      .inner{ transition:none; }
+      .btn{ transition:none; }
+      .chip{ transition:none; }
+    }
+
+  /* 【大螢幕優化】讓字卡內距縮小，釋放空間給字 */
+@media (min-width: 768px){
+  .face{
+    padding:16px 14px;
+    gap:10px;
+  }
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header>
+      <div class="titleWrap">
+        <h1>元素週期表記憶工具</h1>
+        <div class="sub">點卡片翻面｜← → 切換｜空白鍵翻面｜R 隨機</div>
+        <div class="progress" id="progress">—</div>
+      </div>
+
+      <div class="filters" aria-label="分類篩選">
+        <label class="chip" title="金屬">
+          <span class="dot metal"></span>
+          <input id="chkMetal" type="checkbox" checked />
+          金屬
+        </label>
+
+        <label class="chip" title="非金屬">
+          <span class="dot nonmetal"></span>
+          <input id="chkNonmetal" type="checkbox" checked />
+          非金屬
+        </label>
+
+        <label class="chip" title="類金屬">
+          <span class="dot metalloid"></span>
+          <input id="chkMetalloid" type="checkbox" checked />
+          類金屬
+        </label>
+
+        <a class="btn secondary icon"href="./periodic-table.pdf"target="_blank"rel="noopener">📖 週期表</a>
+        <a class="btn secondary icon" id="btnChartNew" href="https://ptable.com/?lang=zh-hant#%E6%80%A7%E8%B3%AA" target="_blank" rel="noopener" title="新分頁開啟 ptable">↗ 開新分頁</a>
+      </div>
+    </header>
+
+    <main>
+      <div class="cardWrap">
+        <div class="card" id="card" role="button" aria-label="元素卡片（點擊翻面）" tabindex="0">
+          <div class="cardHint">點一下翻面</div>
+
+          <div class="inner">
+            <!-- Front -->
+            <div class="face front">
+              <div class="badge" id="badgeFront">
+                <span class="miniDot" id="miniDotFront"></span>
+                <span id="catFront">—</span>
+                <span style="opacity:.65">｜</span>
+                <span>#<span id="idFront">—</span></span>
+              </div>
+
+              <div class="symbol" id="symFront">H</div>
+              <div class="atomic">原子序：<span id="idFront2">1</span></div>
+            </div>
+
+            <!-- Back -->
+            <div class="face back">
+              <div class="badge" id="badgeBack">
+                <span class="miniDot" id="miniDotBack"></span>
+                <span id="catBack">—</span>
+                <span style="opacity:.65">｜</span>
+                <span>#<span id="idBack">—</span></span>
+              </div>
+
+              <div class="name" id="nameBack">氫</div>
+              <div class="mass">原子量：<span id="massBack">1.008</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="btnPrev" type="button">⬅ 上一個</button>
+        <button class="btn" id="btnRand" type="button">🎲 隨機</button>
+        <button class="btn" id="btnNext" type="button">下一個 ➡</button>
+      </div>
+
+      <div class="status" id="status">已載入 118 全元素。預設：三類全選。</div>
+    </main>
+  </div>
+
+  
+  </div>
+
+  <script>
+    /**********************
+     * 118 全元素資料（繁中 + 原子量）
+     * 依 ptable.com/?lang=zh-hant 頁面列表整理
+     **********************/
+    const allElements = [
+  {id:1, s:"H", n:"氫", w:"1.008", c:"非金屬", t:"nonmetal"},
+  {id:2, s:"He", n:"氦", w:"4.0026", c:"非金屬", t:"nonmetal"},
+  {id:3, s:"Li", n:"鋰", w:"6.94", c:"金屬", t:"metal"},
+  {id:4, s:"Be", n:"鈹", w:"9.0122", c:"金屬", t:"metal"},
+  {id:5, s:"B", n:"硼", w:"10.81", c:"類金屬", t:"metalloid"},
+  {id:6, s:"C", n:"碳", w:"12.011", c:"非金屬", t:"nonmetal"},
+  {id:7, s:"N", n:"氮", w:"14.007", c:"非金屬", t:"nonmetal"},
+  {id:8, s:"O", n:"氧", w:"15.999", c:"非金屬", t:"nonmetal"},
+  {id:9, s:"F", n:"氟", w:"18.998", c:"非金屬", t:"nonmetal"},
+  {id:10, s:"Ne", n:"氖", w:"20.180", c:"非金屬", t:"nonmetal"},
+  {id:11, s:"Na", n:"鈉", w:"22.990", c:"金屬", t:"metal"},
+  {id:12, s:"Mg", n:"鎂", w:"24.305", c:"金屬", t:"metal"},
+  {id:13, s:"Al", n:"鋁", w:"26.982", c:"金屬", t:"metal"},
+  {id:14, s:"Si", n:"矽", w:"28.085", c:"類金屬", t:"metalloid"},
+  {id:15, s:"P", n:"磷", w:"30.974", c:"非金屬", t:"nonmetal"},
+  {id:16, s:"S", n:"硫", w:"32.06", c:"非金屬", t:"nonmetal"},
+  {id:17, s:"Cl", n:"氯", w:"35.45", c:"非金屬", t:"nonmetal"},
+  {id:18, s:"Ar", n:"氬", w:"39.948", c:"非金屬", t:"nonmetal"},
+  {id:19, s:"K", n:"鉀", w:"39.098", c:"金屬", t:"metal"},
+  {id:20, s:"Ca", n:"鈣", w:"40.078", c:"金屬", t:"metal"},
+  {id:21, s:"Sc", n:"鈧", w:"44.956", c:"金屬", t:"metal"},
+  {id:22, s:"Ti", n:"鈦", w:"47.867", c:"金屬", t:"metal"},
+  {id:23, s:"V", n:"釩", w:"50.942", c:"金屬", t:"metal"},
+  {id:24, s:"Cr", n:"鉻", w:"51.996", c:"金屬", t:"metal"},
+  {id:25, s:"Mn", n:"錳", w:"54.938", c:"金屬", t:"metal"},
+  {id:26, s:"Fe", n:"鐵", w:"55.845", c:"金屬", t:"metal"},
+  {id:27, s:"Co", n:"鈷", w:"58.933", c:"金屬", t:"metal"},
+  {id:28, s:"Ni", n:"鎳", w:"58.693", c:"金屬", t:"metal"},
+  {id:29, s:"Cu", n:"銅", w:"63.546", c:"金屬", t:"metal"},
+  {id:30, s:"Zn", n:"鋅", w:"65.38", c:"金屬", t:"metal"},
+  {id:31, s:"Ga", n:"鎵", w:"69.723", c:"金屬", t:"metal"},
+  {id:32, s:"Ge", n:"鍺", w:"72.630", c:"類金屬", t:"metalloid"},
+  {id:33, s:"As", n:"砷", w:"74.922", c:"類金屬", t:"metalloid"},
+  {id:34, s:"Se", n:"硒", w:"78.971", c:"非金屬", t:"nonmetal"},
+  {id:35, s:"Br", n:"溴", w:"79.904", c:"非金屬", t:"nonmetal"},
+  {id:36, s:"Kr", n:"氪", w:"83.798", c:"非金屬", t:"nonmetal"},
+  {id:37, s:"Rb", n:"銣", w:"85.468", c:"金屬", t:"metal"},
+  {id:38, s:"Sr", n:"鍶", w:"87.62", c:"金屬", t:"metal"},
+  {id:39, s:"Y", n:"釔", w:"88.906", c:"金屬", t:"metal"},
+  {id:40, s:"Zr", n:"鋯", w:"91.224", c:"金屬", t:"metal"},
+  {id:41, s:"Nb", n:"鈮", w:"92.906", c:"金屬", t:"metal"},
+  {id:42, s:"Mo", n:"鉬", w:"95.95", c:"金屬", t:"metal"},
+  {id:43, s:"Tc", n:"鎝", w:"(98)", c:"金屬", t:"metal"},
+  {id:44, s:"Ru", n:"釕", w:"101.07", c:"金屬", t:"metal"},
+  {id:45, s:"Rh", n:"銠", w:"102.91", c:"金屬", t:"metal"},
+  {id:46, s:"Pd", n:"鈀", w:"106.42", c:"金屬", t:"metal"},
+  {id:47, s:"Ag", n:"銀", w:"107.87", c:"金屬", t:"metal"},
+  {id:48, s:"Cd", n:"鎘", w:"112.41", c:"金屬", t:"metal"},
+  {id:49, s:"In", n:"銦", w:"114.82", c:"金屬", t:"metal"},
+  {id:50, s:"Sn", n:"錫", w:"118.71", c:"金屬", t:"metal"},
+  {id:51, s:"Sb", n:"銻", w:"121.76", c:"類金屬", t:"metalloid"},
+  {id:52, s:"Te", n:"碲", w:"127.60", c:"類金屬", t:"metalloid"},
+  {id:53, s:"I", n:"碘", w:"126.90", c:"非金屬", t:"nonmetal"},
+  {id:54, s:"Xe", n:"氙", w:"131.29", c:"非金屬", t:"nonmetal"},
+  {id:55, s:"Cs", n:"銫", w:"132.91", c:"金屬", t:"metal"},
+  {id:56, s:"Ba", n:"鋇", w:"137.33", c:"金屬", t:"metal"},
+  {id:57, s:"La", n:"鑭", w:"138.91", c:"金屬", t:"metal"},
+  {id:58, s:"Ce", n:"鈰", w:"140.12", c:"金屬", t:"metal"},
+  {id:59, s:"Pr", n:"鐠", w:"140.91", c:"金屬", t:"metal"},
+  {id:60, s:"Nd", n:"釹", w:"144.24", c:"金屬", t:"metal"},
+  {id:61, s:"Pm", n:"鉕", w:"(145)", c:"金屬", t:"metal"},
+  {id:62, s:"Sm", n:"釤", w:"150.36", c:"金屬", t:"metal"},
+  {id:63, s:"Eu", n:"銪", w:"151.96", c:"金屬", t:"metal"},
+  {id:64, s:"Gd", n:"釓", w:"157.25", c:"金屬", t:"metal"},
+  {id:65, s:"Tb", n:"鋱", w:"158.93", c:"金屬", t:"metal"},
+  {id:66, s:"Dy", n:"鏑", w:"162.50", c:"金屬", t:"metal"},
+  {id:67, s:"Ho", n:"鈥", w:"164.93", c:"金屬", t:"metal"},
+  {id:68, s:"Er", n:"鉺", w:"167.26", c:"金屬", t:"metal"},
+  {id:69, s:"Tm", n:"銩", w:"168.93", c:"金屬", t:"metal"},
+  {id:70, s:"Yb", n:"鐿", w:"173.05", c:"金屬", t:"metal"},
+  {id:71, s:"Lu", n:"鎦", w:"174.97", c:"金屬", t:"metal"},
+  {id:72, s:"Hf", n:"鉿", w:"178.49", c:"金屬", t:"metal"},
+  {id:73, s:"Ta", n:"鉭", w:"180.95", c:"金屬", t:"metal"},
+  {id:74, s:"W", n:"鎢", w:"183.84", c:"金屬", t:"metal"},
+  {id:75, s:"Re", n:"錸", w:"186.21", c:"金屬", t:"metal"},
+  {id:76, s:"Os", n:"鋨", w:"190.23", c:"金屬", t:"metal"},
+  {id:77, s:"Ir", n:"銥", w:"192.22", c:"金屬", t:"metal"},
+  {id:78, s:"Pt", n:"鉑", w:"195.08", c:"金屬", t:"metal"},
+  {id:79, s:"Au", n:"金", w:"196.97", c:"金屬", t:"metal"},
+  {id:80, s:"Hg", n:"汞", w:"200.59", c:"金屬", t:"metal"},
+  {id:81, s:"Tl", n:"鉈", w:"204.38", c:"金屬", t:"metal"},
+  {id:82, s:"Pb", n:"鉛", w:"207.2", c:"金屬", t:"metal"},
+  {id:83, s:"Bi", n:"鉍", w:"208.98", c:"金屬", t:"metal"},
+  {id:84, s:"Po", n:"釙", w:"(209)", c:"金屬", t:"metal"},
+  {id:85, s:"At", n:"砈", w:"(210)", c:"非金屬", t:"nonmetal"},
+  {id:86, s:"Rn", n:"氡", w:"(222)", c:"非金屬", t:"nonmetal"},
+  {id:87, s:"Fr", n:"钫", w:"(223)", c:"金屬", t:"metal"},
+  {id:88, s:"Ra", n:"鐳", w:"(226)", c:"金屬", t:"metal"},
+  {id:89, s:"Ac", n:"錒", w:"(227)", c:"金屬", t:"metal"},
+  {id:90, s:"Th", n:"釷", w:"232.04", c:"金屬", t:"metal"},
+  {id:91, s:"Pa", n:"鏷", w:"231.04", c:"金屬", t:"metal"},
+  {id:92, s:"U", n:"鈾", w:"238.03", c:"金屬", t:"metal"},
+  {id:93, s:"Np", n:"錼", w:"(237)", c:"金屬", t:"metal"},
+  {id:94, s:"Pu", n:"鈽", w:"(244)", c:"金屬", t:"metal"},
+  {id:95, s:"Am", n:"鋂", w:"(243)", c:"金屬", t:"metal"},
+  {id:96, s:"Cm", n:"鋦", w:"(247)", c:"金屬", t:"metal"},
+  {id:97, s:"Bk", n:"鉳", w:"(247)", c:"金屬", t:"metal"},
+  {id:98, s:"Cf", n:"鉲", w:"(251)", c:"金屬", t:"metal"},
+  {id:99, s:"Es", n:"鑀", w:"(252)", c:"金屬", t:"metal"},
+  {id:100, s:"Fm", n:"鐨", w:"(257)", c:"金屬", t:"metal"},
+  {id:101, s:"Md", n:"鍆", w:"(258)", c:"金屬", t:"metal"},
+  {id:102, s:"No", n:"鍩", w:"(259)", c:"金屬", t:"metal"},
+  {id:103, s:"Lr", n:"鐒", w:"(266)", c:"金屬", t:"metal"},
+  {id:104, s:"Rf", n:"鑪", w:"(267)", c:"金屬", t:"metal"},
+  {id:105, s:"Db", n:"𨧀", w:"(268)", c:"金屬", t:"metal"},
+  {id:106, s:"Sg", n:"𨭎", w:"(269)", c:"金屬", t:"metal"},
+  {id:107, s:"Bh", n:"𨨏", w:"(270)", c:"金屬", t:"metal"},
+  {id:108, s:"Hs", n:"𨭆", w:"(277)", c:"金屬", t:"metal"},
+  {id:109, s:"Mt", n:"䥑", w:"(278)", c:"金屬", t:"metal"},
+  {id:110, s:"Ds", n:"鐽", w:"(281)", c:"金屬", t:"metal"},
+  {id:111, s:"Rg", n:"錀", w:"(282)", c:"金屬", t:"metal"},
+  {id:112, s:"Cn", n:"鎶", w:"(285)", c:"金屬", t:"metal"},
+  {id:113, s:"Nh", n:"鉨", w:"(286)", c:"金屬", t:"metal"},
+  {id:114, s:"Fl", n:"鈇", w:"(289)", c:"金屬", t:"metal"},
+  {id:115, s:"Mc", n:"鏌", w:"(290)", c:"金屬", t:"metal"},
+  {id:116, s:"Lv", n:"鉝", w:"(293)", c:"金屬", t:"metal"},
+  {id:117, s:"Ts", n:"鿬", w:"(294)", c:"非金屬", t:"nonmetal"},
+  {id:118, s:"Og", n:"鿫", w:"(294)", c:"非金屬", t:"nonmetal"}
+    ];
+
+    // ---- State ----
+    let pool = [];
+    let idx = 0;
+
+    // ---- DOM ----
+    const card = document.getElementById("card");
+    const progress = document.getElementById("progress");
+    const status = document.getElementById("status");
+
+    const symFront = document.getElementById("symFront");
+    const idFront = document.getElementById("idFront");
+    const idFront2 = document.getElementById("idFront2");
+    const catFront = document.getElementById("catFront");
+
+    const nameBack = document.getElementById("nameBack");
+    const massBack = document.getElementById("massBack");
+    const idBack = document.getElementById("idBack");
+    const catBack = document.getElementById("catBack");
+
+    const miniDotFront = document.getElementById("miniDotFront");
+    const miniDotBack = document.getElementById("miniDotBack");
+
+    const chkMetal = document.getElementById("chkMetal");
+    const chkNonmetal = document.getElementById("chkNonmetal");
+    const chkMetalloid = document.getElementById("chkMetalloid");
+
+    const btnPrev = document.getElementById("btnPrev");
+    const btnNext = document.getElementById("btnNext");
+    const btnRand = document.getElementById("btnRand");
+
+
+    function catColor(type){
+      if(type === "metal") return getComputedStyle(document.documentElement).getPropertyValue("--metal").trim();
+      if(type === "nonmetal") return getComputedStyle(document.documentElement).getPropertyValue("--nonmetal").trim();
+      return getComputedStyle(document.documentElement).getPropertyValue("--metalloid").trim();
+    }
+
+    function buildPool(){
+      const types = new Set();
+      if(chkMetal.checked) types.add("metal");
+      if(chkNonmetal.checked) types.add("nonmetal");
+      if(chkMetalloid.checked) types.add("metalloid");
+
+      // 防呆：至少勾一個
+      if(types.size === 0){
+        chkMetal.checked = true;
+        chkNonmetal.checked = true;
+        chkMetalloid.checked = true;
+        types.add("metal"); types.add("nonmetal"); types.add("metalloid");
+        status.textContent = "已自動恢復：至少需選 1 類（已恢復全選）。";
+      }else{
+        status.textContent = `目前練習類別：${[
+          chkMetal.checked ? "金屬" : null,
+          chkNonmetal.checked ? "非金屬" : null,
+          chkMetalloid.checked ? "類金屬" : null
+        ].filter(Boolean).join("、")}（共 ${Array.from(types).length} 類）`;
+      }
+
+      pool = allElements.filter(e => types.has(e.t));
+      idx = 0;
+      render();
+    }
+
+    function render(){
+      if(pool.length === 0){
+        progress.textContent = "0 / 0";
+        symFront.textContent = "—";
+        idFront.textContent = "—";
+        idFront2.textContent = "—";
+        catFront.textContent = "—";
+        nameBack.textContent = "—";
+        massBack.textContent = "—";
+        idBack.textContent = "—";
+        catBack.textContent = "—";
+        return;
+      }
+
+      const e = pool[idx];
+      symFront.textContent = e.s;
+      idFront.textContent = e.id;
+      idFront2.textContent = e.id;
+      catFront.textContent = e.c;
+
+      nameBack.textContent = e.n;
+      massBack.textContent = e.w;
+      idBack.textContent = e.id;
+      catBack.textContent = e.c;
+
+      const color = catColor(e.t);
+      miniDotFront.style.background = color;
+      miniDotBack.style.background = color;
+
+      progress.textContent = `${idx + 1} / ${pool.length}`;
+    }
+
+    function prev(){
+      if(pool.length === 0) return;
+      idx = (idx - 1 + pool.length) % pool.length;
+      card.classList.remove("flipped");
+      render();
+    }
+
+    function next(){
+      if(pool.length === 0) return;
+      idx = (idx + 1) % pool.length;
+      card.classList.remove("flipped");
+      render();
+    }
+
+    function rand(){
+      if(pool.length === 0) return;
+      let newIdx = idx;
+      if(pool.length > 1){
+        while(newIdx === idx) newIdx = Math.floor(Math.random() * pool.length);
+      }
+      idx = newIdx;
+      card.classList.remove("flipped");
+      render();
+    }
+
+    function flip(){
+      card.classList.toggle("flipped");
+    }
+
+    // ---- Events ----
+    chkMetal.addEventListener("change", buildPool);
+    chkNonmetal.addEventListener("change", buildPool);
+    chkMetalloid.addEventListener("change", buildPool);
+
+    btnPrev.addEventListener("click", prev);
+    btnNext.addEventListener("click", next);
+    btnRand.addEventListener("click", rand);
+
+    card.addEventListener("click", flip);
+    card.addEventListener("keydown", (ev)=>{
+      if(ev.key === "Enter" || ev.key === " "){
+        ev.preventDefault();
+        flip();
+      }
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener("keydown", (ev)=>{
+      // 避免在輸入框時觸發（目前頁面沒有 input text，但先防呆）
+      const tag = (ev.target && ev.target.tagName) ? ev.target.tagName.toLowerCase() : "";
+      if(tag === "input" || tag === "textarea") return;
+
+      if(ev.key === "ArrowLeft") prev();
+      if(ev.key === "ArrowRight") next();
+      if(ev.key.toLowerCase() === "r") rand();
+      if(ev.key === " "){ ev.preventDefault(); flip(); }
+    });
+
+
+    // Init
+    buildPool();
+    status.textContent = "已載入 118 全元素。預設：三類全選。";
+  </script>
+</body>
+</html>
